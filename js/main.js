@@ -65,7 +65,7 @@ let screenRecorder = null;
 let isUsingTool = false;
 
 // Multimodal Client
-const client = new MultimodalLiveClient({ apiKey: CONFIG.API.KEY });
+const client = new MultimodalLiveClient({url: CONFIG.API.BASE_URL, apiKey: CONFIG.API.KEY });
 
 // Initialize configuration values
 voiceSelect.value = CONFIG.VOICE.NAME;
