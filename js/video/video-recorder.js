@@ -32,24 +32,28 @@ export class VideoRecorder {
             ...options
         };
         this.frameCount = 0; // Add frame counter for debugging
+        this.currentCamera = 'user'; // 'user' for front camera, 'environment' for back camera
     }
 
     /**
      * Starts video recording.
      * @param {HTMLVideoElement} previewElement - The video element to display the video preview.
      * @param {Function} onVideoData - Callback function to receive video frame data.
+     * @param {string} [cameraFacing='user'] - The camera to use ('user' for front, 'environment' for back).
      * @throws {ApplicationError} Throws an error if the video recording fails to start.
      */
-    async start(previewElement, onVideoData) {
+    async start(previewElement, onVideoData, cameraFacing = 'user') {
         try {
             this.previewElement = previewElement;
             this.onVideoData = onVideoData;
+            this.currentCamera = cameraFacing;
 
             // Request camera access
-            this.stream = await navigator.mediaDevices.getUserMedia({ 
+            this.stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: this.options.width },
-                    height: { ideal: this.options.height }
+                    height: { ideal: this.options.height },
+                    facingMode: { ideal: this.currentCamera }
                 }
             });
 
@@ -72,6 +76,45 @@ export class VideoRecorder {
             throw new ApplicationError(
                 'Failed to start video recording',
                 ErrorCodes.VIDEO_START_FAILED,
+                { originalError: error }
+            );
+        }
+    }
+
+    /**
+     * Switches between front and back cameras.
+     * @returns {Promise<void>}
+     * @throws {ApplicationError} Throws an error if switching cameras fails.
+     */
+    async switchCamera() {
+        try {
+            // Stop the current stream
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+            }
+
+            // Toggle the camera facing mode
+            this.currentCamera = this.currentCamera === 'user' ? 'environment' : 'user';
+
+            // Start a new stream with the new camera
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: this.options.width },
+                    height: { ideal: this.options.height },
+                    facingMode: { ideal: this.currentCamera }
+                }
+            });
+
+            // Update the preview
+            this.previewElement.srcObject = this.stream;
+            await this.previewElement.play();
+
+            Logger.info(`Switched to ${this.currentCamera === 'user' ? 'front' : 'back'} camera`);
+        } catch (error) {
+            Logger.error('Failed to switch camera:', error);
+            throw new ApplicationError(
+                'Failed to switch camera',
+                ErrorCodes.CAMERA_SWITCH_FAILED,
                 { originalError: error }
             );
         }

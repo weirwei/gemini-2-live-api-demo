@@ -22,6 +22,7 @@ const connectButton = document.getElementById('connect-button');
 const cameraButton = document.getElementById('camera-button');
 const cameraIcon = document.getElementById('camera-icon');
 const stopVideoButton = document.getElementById('stop-video');
+const switchCameraButton = document.getElementById('switch-camera');
 const screenButton = document.getElementById('screen-button');
 const screenIcon = document.getElementById('screen-icon');
 const screenContainer = document.getElementById('screen-container');
@@ -627,11 +628,27 @@ function stopVideo() {
     isVideoActive = false;
     cameraIcon.textContent = 'videocam';
     cameraButton.classList.remove('active');
-    logMessage('Camera stopped', 'system');
+    switchCameraButton.style.display = 'none';
+    logMessage('摄像头已停止', 'system');
+}
+
+/**
+ * Handles switching between front and back cameras.
+ */
+async function handleSwitchCamera() {
+    if (videoManager) {
+        try {
+            await videoManager.switchCamera();
+            logMessage('摄像头已切换', 'system');
+        } catch (error) {
+            logMessage(`切换摄像头失败: ${error.message}`, 'system');
+        }
+    }
 }
 
 cameraButton.addEventListener('click', handleVideoToggle);
 stopVideoButton.addEventListener('click', stopVideo);
+switchCameraButton.addEventListener('click', handleSwitchCamera);
 
 cameraButton.disabled = true;
 

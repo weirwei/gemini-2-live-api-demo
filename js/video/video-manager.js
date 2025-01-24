@@ -28,6 +28,7 @@ export class VideoManager {
         this.previewVideo = document.getElementById('preview');
         this.stopVideoButton = document.getElementById('stop-video');
         this.framePreview = document.createElement('canvas');
+        this.switchCameraButton = document.createElement('button');
         
         // State management
         this.lastFrameData = null;
@@ -43,6 +44,7 @@ export class VideoManager {
         this.FORCE_FRAME_INTERVAL = 10; // Send frame every N frames regardless of motion
 
         this.setupFramePreview();
+        this.setupSwitchCameraButton();
     }
 
     /**
@@ -58,6 +60,21 @@ export class VideoManager {
         // Add click handler to toggle preview size
         this.framePreview.addEventListener('click', () => {
             this.framePreview.classList.toggle('enlarged');
+        });
+    }
+
+    /**
+     * Sets up the switch camera button
+     * @private
+     */
+    setupSwitchCameraButton() {
+        this.switchCameraButton.id = 'switch-camera';
+        this.switchCameraButton.textContent = '切换摄像头';
+        this.switchCameraButton.style.display = 'none';
+        this.videoContainer.appendChild(this.switchCameraButton);
+
+        this.switchCameraButton.addEventListener('click', () => {
+            this.switchCamera();
         });
     }
 
@@ -124,6 +141,7 @@ export class VideoManager {
             });
 
             this.isActive = true;
+            this.switchCameraButton.style.display = 'block';
             return true;
 
         } catch (error) {
@@ -134,6 +152,25 @@ export class VideoManager {
                 ErrorCodes.VIDEO_START_FAILED,
                 { originalError: error }
             );
+        }
+    }
+
+    /**
+     * Switches between front and back cameras
+     */
+    async switchCamera() {
+        if (this.videoRecorder) {
+            try {
+                await this.videoRecorder.switchCamera();
+                Logger.info('Camera switched successfully');
+            } catch (error) {
+                Logger.error('Failed to switch camera:', error);
+                throw new ApplicationError(
+                    'Failed to switch camera',
+                    ErrorCodes.CAMERA_SWITCH_FAILED,
+                    { originalError: error }
+                );
+            }
         }
     }
 
