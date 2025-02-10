@@ -1,1 +1,4 @@
 config.js
+*.pem
+*.key
+nginx.conf
